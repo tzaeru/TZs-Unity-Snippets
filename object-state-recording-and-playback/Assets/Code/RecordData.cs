@@ -43,8 +43,6 @@ public class RecordData {
 
         RecordObjectState[] interpolated_states = new RecordObjectState[object_count];
 
-        UnityEngine.Debug.Log("Bias: " + bias);
-
         for (int i = 0; i < object_count; i++)
         {
             RecordObjectState next_state = states[states.Keys[next_key]][i];
@@ -94,8 +92,6 @@ public class RecordData {
             if (comp.Compare(list[m], value) < 0) lo = m + 1;
             else hi = m - 1;
         }
-        UnityEngine.Debug.Log("LO is: " + lo);
-        UnityEngine.Debug.Log("Key count is: " + list.Count);
         if (comp.Compare(list[lo], value) < 0) lo++;
         return lo;
     }

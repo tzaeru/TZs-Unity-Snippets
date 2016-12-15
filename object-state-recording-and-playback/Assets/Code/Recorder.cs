@@ -99,6 +99,8 @@ public class Recorder : MonoBehaviour {
             transforms[i].localRotation = states[i].rotation;
             //transforms[i]scale thing
         }
+
+        
     }
 
     // Use this for initialization
