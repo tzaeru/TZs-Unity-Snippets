@@ -11,6 +11,8 @@ public class Recorder : MonoBehaviour {
 
     public bool reverse = false;
 
+    public bool disable_collisions_playback = false;
+
     protected float last_recorded_at = -1.0f;
 
     protected RecordData record_data;
@@ -19,6 +21,13 @@ public class Recorder : MonoBehaviour {
     protected bool playing = false;
 
     protected Transform[] transforms;
+
+    protected struct RigidbodyValues
+    {
+        public bool kinematic;
+        public bool detect_collisions;
+    }
+    protected List<RigidbodyValues> cached_rigidbody_values;
 
     public void StartRecording()
     {
@@ -44,11 +53,59 @@ public class Recorder : MonoBehaviour {
     {
         play_start_time = Time.time;
         playing = true;
+
+        if (disable_collisions_playback)
+        {
+            cached_rigidbody_values = new List<RigidbodyValues>(transforms.Length);
+
+            foreach (var trans in transforms)
+            {
+                RigidbodyValues cached_values;
+
+                if (trans.GetComponent<Rigidbody>())
+                {
+                    cached_values.kinematic = trans.GetComponent<Rigidbody>().isKinematic;
+                    cached_values.detect_collisions = trans.GetComponent<Rigidbody>().detectCollisions;
+
+                    trans.GetComponent<Rigidbody>().isKinematic = true;
+                    trans.GetComponent<Rigidbody>().detectCollisions = false;
+                }
+                else if (trans.GetComponent<Rigidbody2D>())
+                {
+                    cached_values.kinematic = trans.GetComponent<Rigidbody2D>().isKinematic;
+                    cached_values.detect_collisions = false;
+
+                    trans.GetComponent<Rigidbody2D>().isKinematic = true;
+                    //trans.GetComponent<Rigidbody2D>().detectCollisions = false;
+                }
+                else
+                    continue;
+
+                cached_rigidbody_values.Add(cached_values);
+            }
+        }
     }
 
-    public void StopPlay()
+    public void StopPlaying()
     {
         playing = false;
+
+        if (disable_collisions_playback)
+        {
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                if (transforms[i].GetComponent<Rigidbody>())
+                {
+                    transforms[i].GetComponent<Rigidbody>().isKinematic = cached_rigidbody_values[i].kinematic;
+                    transforms[i].GetComponent<Rigidbody>().detectCollisions = cached_rigidbody_values[i].detect_collisions;
+                }
+                else if (transforms[i].GetComponent<Rigidbody2D>())
+                {
+                    transforms[i].GetComponent<Rigidbody2D>().isKinematic = cached_rigidbody_values[i].kinematic;
+                    //transforms[i].GetComponent<Rigidbody2D>().detectCollisions = cached_rigidbody_values[i].detect_collisions;
+                }
+            }
+        }
     }
 
     public void SetTo(float normalized_time)
@@ -124,7 +181,7 @@ public class Recorder : MonoBehaviour {
             if (!playing)
                 StartPlaying();
             else
-                StopPlay();
+                StopPlaying();
         }
 
         if (recording)
